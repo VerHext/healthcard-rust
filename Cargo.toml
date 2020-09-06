@@ -5,7 +5,10 @@ authors = ["KlexHub UG (haftungsbeschränkt) <info@klexhub.com>","Johannes Waige
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
+#pscs_scan
 [dependencies]
 pcsc = "2"
-byteorder= "1.3.4"
+flate2 = "1.0"
+libz-sys = "1.1.2"
+xpath_reader = "0.5.3"
+serde_json = "1.0"
