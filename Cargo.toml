@@ -1,8 +1,11 @@
 [package]
 name = "healthcard_rust"
+description = "Read data from German public health insurance cards (Elektronische Gesundheitskarte eGK)"
 version = "0.1.0"
 authors = ["KlexHub UG (haftungsbeschränkt) <info@klexhub.com>","Johannes Waigel <johannes@waigel.me>"]
 edition = "2018"
+license= "MIT"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 #pscs_scan
