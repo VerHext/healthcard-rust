@@ -24,6 +24,7 @@ pub enum CardType {
     NOTSAVED,
     UNKNOW,
 }
+
 ///Kartenterminatype ermittel
 /// 9000 - stationäres Kartenterminal
 /// 9500 - mobiles Kartenterminal
@@ -39,15 +40,15 @@ const SELECT_MF: &[u8] = b"\x00\xA4\x04\x0C\x07\xD2\x76\x00\x01\x44\x80\x00";
 const SELECT_HCA: &[u8] = b"\x00\xA4\x04\x0C\x06\xD2\x76\x00\x00\x01\x02";
 const SELECT_FILE_PD: &[u8] = b"\x00\xB0\x81\x00\x02";
 const SELECT_FILE_VD: &[u8] = b"\x00\xB0\x82\x00\x08";
+const CARD_ATR: &[u8] = b"\x3B\xD3\x96\xFF\x81\xB1\xFE\x45\x1F\x07\x80\x81\x05\x2D";
 //const EJECT_CARD: &[u8] = b"\x20\x15\x01\x00\x01\x01";
 
-pub fn get_card() -> Card {
+pub fn get_card() -> Result<Card, Error>  {
     // Establish a PC/SC context.
     let ctx = match pcsc::Context::establish(Scope::User) {
         Ok(ctx) => ctx,
         Err(err) => {
-            println!("Failed to establish context: {}", err);
-            std::process::exit(1);
+            panic!("Failed to establish context: {}", err);
         }
     };
 
@@ -56,8 +57,8 @@ pub fn get_card() -> Card {
     let mut readers = match ctx.list_readers(&mut readers_buf) {
         Ok(readers) => readers,
         Err(err) => {
-            println!("Failed to list readers: {}", err);
-            std::process::exit(1);
+            panic!("Failed to list readers: {}", err);
+            
         }
     };
 
@@ -65,23 +66,20 @@ pub fn get_card() -> Card {
     let reader = match readers.next() {
         Some(reader) => reader,
         None => {
-            println!("No readers are connected.");
-            std::process::exit(1);
+            panic!("No readers are connected.");
         }
     };
     // Connect to the card.
     let card = match ctx.connect(reader, ShareMode::Shared, Protocols::ANY) {
         Ok(card) => card,
         Err(Error::NoSmartcard) => {
-            println!("A smartcard is not present in the reader.");
-            std::process::exit(1);
+            panic!("A smartcard is not present in the reader.");
         }
         Err(err) => {
-            println!("Failed to connect to card: {}", err);
-            std::process::exit(1);
+            panic!("Failed to connect to card: {}", err);
         }
     };
-    return card;
+    Ok(card)
 }
 
 pub fn get_card_data(card: &Card) -> serde_json::Value {
@@ -204,6 +202,16 @@ pub fn get_version(card: &Card, version_string: &[u8]) -> String {
         helpers::decode_bcd(&a[3..6]),
         helpers::decode_bcd(&a[6..10])
     );
+}
+pub fn is_health_card(card: &Card) -> bool{
+    let (names_len, _atr_len) = card.status2_len().expect("failed to get the status length");
+    let mut names_buf = vec![0; names_len];
+    let mut atr_buf = [0; MAX_ATR_SIZE];
+    let status = card.status2(&mut names_buf, &mut atr_buf).expect("failed to get card status");
+    if status.atr() == CARD_ATR{
+        return true;
+    }
+    return false;
 }
 
 fn send_apdu(card: &Card, cmd: &[u8]) -> Vec<u8> {
