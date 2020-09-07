@@ -1,5 +1,5 @@
 [package]
-name = "theralib-connect"
+name = "healthcard_rust"
 version = "0.1.0"
 authors = ["KlexHub UG (haftungsbeschränkt) <info@klexhub.com>","Johannes Waigel <johannes@waigel.me>"]
 edition = "2018"
